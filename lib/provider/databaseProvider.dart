@@ -1,7 +1,9 @@
 import 'dart:io';
+
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:todo_list/models/task_category.dart';
 import 'package:todo_list/models/task.dart';
 
 class DBProvider {
@@ -26,7 +28,15 @@ class DBProvider {
       await db.execute("CREATE TABLE Task ("
           "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
           "title TEXT DEFAULT 'TASK',"
-          "description TEXT DEFAULT 'no description'"
+          "description TEXT DEFAULT 'no description',"
+          "color INTEGER,"
+          "time INTEGER,"
+          "date TEXT"
+          ")");
+      await db.execute("CREATE TABLE Category ("
+          "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+          "title TEXT DEFAULT 'category name',"
+          "color INTEGER"
           ")");
     });
   }
@@ -59,20 +69,88 @@ class DBProvider {
         id: maps[i]['id'],
         title: maps[i]['title'],
         description: maps[i]['description'],
+        color: maps[i]['color'],
+        time: maps[i]['time'],
+        date: maps[i]['date'],
       );
     });
   }
 
-  // Get a task by id
-  getTask(int idTask) async {
-    final db = await database;
-    var res = await db.query("Task", where: "id = ?", whereArgs: [idTask]);
-    return res.isNotEmpty ? Task.fromMap(res.first) : Null;
+  Future<List<Task>> getTodayTasks() async {
+    String date = DateTime.now().year.toString() +
+        "-" +
+        DateTime.now().month.toString() +
+        "-" +
+        DateTime.now().day.toString();
+    // Get a reference to the database.
+    final Database db = await database;
+
+    // Query the table for all The Dogs.
+    final List<Map<String, dynamic>> maps =
+        await db.query('Task', where: "date = ?", whereArgs: [date]);
+    // Convert the List<Map<String, dynamic> into a List<Dog>.
+    return List.generate(maps.length, (i) {
+      return Task(
+          id: maps[i]['id'],
+          title: maps[i]['title'],
+          description: maps[i]['description'],
+          color: maps[i]['color'],
+          time: maps[i]['time'],
+          date: maps[i]['date']);
+    });
+
   }
 
   // Delete a task by id
   deleteTask(int id) async {
     final db = await database;
     db.delete("Task", where: "id = ?", whereArgs: [id]);
+  }
+
+  // Add Category
+  Future<void> insertCategory(TaskCategory category) async {
+    // Get a reference to the database.
+    final Database db = await database;
+
+    // Insert the Dog into the correct table. You might also specify the
+    // `conflictAlgorithm` to use in case the same dog is inserted twice.
+    //
+    // In this case, replace any previous data.
+    await db.insert(
+      'Category',
+      category.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Get categories
+  Future<List<TaskCategory>> getAllCategories() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('Category');
+
+    return List.generate(maps.length, (i) {
+      return TaskCategory(
+        id: maps[i]['id'],
+        title: maps[i]['title'],
+        color: maps[i]['color'],
+      );
+    });
+  }
+
+  Future<List<TaskCategory>> getCategoryById(int id) async {
+    // Get a reference to the database.
+    final Database db = await database;
+
+    // Query the table for all The Dogs.
+    final List<Map<String, dynamic>> maps =
+        await db.query('Category', where: "id = ?", whereArgs: [1]);
+    // Convert the List<Map<String, dynamic> into a List<Dog>.
+    return List.generate(maps.length, (i) {
+      return TaskCategory(
+        id: maps[i]['id'],
+        title: maps[i]['title'],
+        color: maps[i]['color'],
+      );
+    });
   }
 }

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:todo_list/constants.dart';
-import 'package:todo_list/models/task.dart';
+
 import 'package:todo_list/provider/databaseProvider.dart';
 import 'package:todo_list/screens/home/components/task_widget.dart';
 import 'package:todo_list/size_config.dart';
@@ -16,7 +15,7 @@ class _BodyState extends State<Body> {
   bool isToday = true;
 
   CalendarController ctrl;
-  List<Task> tasks;
+  
   DateTime todayDate = DateTime.now();
 
   @override
@@ -83,7 +82,7 @@ class _BodyState extends State<Body> {
             : TableCalendar(
                 calendarController: ctrl,
                 startingDayOfWeek: StartingDayOfWeek.sunday,
-                initialCalendarFormat: CalendarFormat.week,
+                initialCalendarFormat: CalendarFormat.month,
               ),
         Expanded(
           child: SingleChildScrollView(
@@ -108,7 +107,7 @@ class _BodyState extends State<Body> {
                           height: SizeConfig.defaultSize,
                         ),
                         FutureBuilder(
-                            future: DBProvider.db.getAllTasks(),
+                            future: (!isToday) ? DBProvider.db.getAllTasks() : DBProvider.db.getTodayTasks(),
                             builder:
                                 (BuildContext context, AsyncSnapshot snapshot) {
                               if (snapshot.connectionState ==
@@ -121,12 +120,21 @@ class _BodyState extends State<Body> {
                                   children: List.generate(snapshot.data.length,
                                       (index) {
                                     return TaskWidget(
-                                      color: Colors.red,
+                                      color: Color(snapshot.data[index].color),
                                       name: snapshot.data[index].title,
+                                      date: snapshot.data[index].date,
+                                      time: TimeOfDay(
+                                          hour: snapshot.data[index].time ~/ 60,
+                                          minute:
+                                              snapshot.data[index].time % 60),
                                       function: () {
                                         setState(() {
-                                          DBProvider.db.deleteTask(snapshot.data[index].id);
+                                          DBProvider.db.deleteTask(
+                                              snapshot.data[index].id);
                                         });
+                                      },
+                                      function2: () {
+                                        // Edit task
                                       },
                                     );
                                   }),
@@ -145,85 +153,6 @@ class _BodyState extends State<Body> {
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget buildTaskWidget(Color color, {int index}) {
-    return Slidable(
-      actionPane: SlidableDrawerActionPane(),
-      actionExtentRatio: 0.3,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: SizeConfig.defaultSize * 0.2),
-        width: SizeConfig.screenHeight,
-        height: SizeConfig.screenWidth / 6,
-        decoration: BoxDecoration(color: Colors.white, boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              offset: Offset(0, 9),
-              blurRadius: 20,
-              spreadRadius: 1)
-        ]),
-        child: Row(
-          children: [
-            Container(
-              margin:
-                  EdgeInsets.symmetric(horizontal: SizeConfig.defaultSize * 2),
-              width: SizeConfig.defaultSize * 2.6,
-              height: SizeConfig.defaultSize * 2.6,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: color, width: 4)),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Task Name ${index + 1}",
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: SizeConfig.defaultSize * 1.9)),
-                Text("3:30 PM",
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: SizeConfig.defaultSize * 1.7))
-              ],
-            ),
-            Expanded(child: Container()),
-            Container(
-              width: 5,
-              height: SizeConfig.defaultSize * 3,
-              decoration: BoxDecoration(color: color),
-            )
-          ],
-        ),
-      ),
-      secondaryActions: [
-        Container(
-          padding:
-              EdgeInsets.symmetric(horizontal: SizeConfig.defaultSize * 0.5),
-          child: IconSlideAction(
-            icon: Icons.edit,
-            caption: "Edit",
-            color: Colors.green,
-            onTap: () {
-              print("object");
-            },
-          ),
-        ),
-        Container(
-          padding:
-              EdgeInsets.symmetric(horizontal: SizeConfig.defaultSize * 0.5),
-          child: IconSlideAction(
-            icon: Icons.delete,
-            caption: "Edit",
-            color: Colors.red[600],
-            onTap: () {
-              print("object");
-            },
-          ),
-        )
       ],
     );
   }

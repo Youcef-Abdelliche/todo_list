@@ -6,10 +6,22 @@ import '../../../size_config.dart';
 class TaskWidget extends StatefulWidget {
   final Color color;
   final int index;
+  final TimeOfDay time;
   final String name;
+  final String date;
   final Function function;
+  final Function function2;
 
-  const TaskWidget({Key key, this.color, this.index, this.name,this.function}) : super(key: key);
+  const TaskWidget({
+    Key key,
+    this.color,
+    this.index,
+    this.name,
+    this.function,
+    this.function2,
+    this.time,
+    this.date,
+  }) : super(key: key);
 
   @override
   _TaskWidgetState createState() => _TaskWidgetState();
@@ -52,10 +64,14 @@ class _TaskWidgetState extends State<TaskWidget> {
                     style: TextStyle(
                         color: Colors.black,
                         fontSize: SizeConfig.defaultSize * 1.9)),
-                Text("3:30 PM",
+                Text(widget.time.toString().substring(10, 15),
                     style: TextStyle(
                         color: Colors.grey,
-                        fontSize: SizeConfig.defaultSize * 1.7))
+                        fontSize: SizeConfig.defaultSize * 1.7)),
+                Text(widget.date,
+                    style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: SizeConfig.defaultSize * 1.7)),
               ],
             ),
             Expanded(child: Container()),
@@ -76,7 +92,8 @@ class _TaskWidgetState extends State<TaskWidget> {
             caption: "Edit",
             color: Colors.green,
             onTap: () {
-              print("object");
+              print("Edit task");
+              widget.function2();
             },
           ),
         ),

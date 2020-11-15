@@ -15,15 +15,19 @@ class Task {
   String title;
   String description;
   String date;
+  int time;
   bool isFinished;
   String category;
+  int color;
 
   Task({
     this.id,
     this.title,
-    //this.date,
+    this.time,
     //this.isFinished,
     this.description,
+    this.color,
+    this.date,
     //this.category,
   });
 
@@ -37,12 +41,17 @@ class Task {
         id: json["id"],
         title: json["title"],
         description: json["description"],
-       
+        color: json["color"],
+        time: json['time'],
+        date: json['date'],
       );
 
   Map<String, dynamic> toMap() => {
         'id': id,
         'title': title,
         'description': description,
+        'color': color,
+        'time': time,
+        'date': date,
       };
 }
