@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:todo_list/models/task_category.dart';
 
 import '../../../size_config.dart';
 
@@ -9,19 +10,21 @@ class TaskWidget extends StatefulWidget {
   final TimeOfDay time;
   final String name;
   final String date;
+  final TaskCategory category;
   final Function function;
   final Function function2;
 
-  const TaskWidget({
-    Key key,
-    this.color,
-    this.index,
-    this.name,
-    this.function,
-    this.function2,
-    this.time,
-    this.date,
-  }) : super(key: key);
+  const TaskWidget(
+      {Key key,
+      this.color,
+      this.index,
+      this.name,
+      this.function,
+      this.function2,
+      this.time,
+      this.date,
+      this.category})
+      : super(key: key);
 
   @override
   _TaskWidgetState createState() => _TaskWidgetState();
@@ -54,7 +57,8 @@ class _TaskWidgetState extends State<TaskWidget> {
               decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  border: Border.all(color: widget.color, width: 4)),
+                  border: Border.all(
+                      color: Color(widget.category.color), width: 4)),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,17 +72,16 @@ class _TaskWidgetState extends State<TaskWidget> {
                     style: TextStyle(
                         color: Colors.grey,
                         fontSize: SizeConfig.defaultSize * 1.7)),
-                Text(widget.date,
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: SizeConfig.defaultSize * 1.7)),
               ],
             ),
             Expanded(child: Container()),
             Container(
-              width: 5,
-              height: SizeConfig.defaultSize * 3,
-              decoration: BoxDecoration(color: widget.color),
+              padding: EdgeInsets.all(6),
+              //width: 5,
+              //height: SizeConfig.defaultSize * 3,
+              child: Text(widget.category.title,
+                  style: TextStyle(color: Colors.white)),
+              decoration: BoxDecoration(color: Color(widget.category.color)),
             )
           ],
         ),

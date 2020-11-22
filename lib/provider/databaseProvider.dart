@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -31,7 +31,9 @@ class DBProvider {
           "description TEXT DEFAULT 'no description',"
           "color INTEGER,"
           "time INTEGER,"
-          "date TEXT"
+          "date TEXT,"
+          "categoryId INTEGER,"
+          "FOREIGN KEY(categoryId) references Category(id) ON DELETE CASCADE"
           ")");
       await db.execute("CREATE TABLE Category ("
           "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
@@ -44,11 +46,6 @@ class DBProvider {
   Future<void> insertTask(Task task) async {
     // Get a reference to the database.
     final Database db = await database;
-
-    // Insert the Dog into the correct table. You might also specify the
-    // `conflictAlgorithm` to use in case the same dog is inserted twice.
-    //
-    // In this case, replace any previous data.
     await db.insert(
       'Task',
       task.toMap(),
@@ -62,9 +59,12 @@ class DBProvider {
 
     // Query the table for all The Dogs.
     final List<Map<String, dynamic>> maps = await db.query('Task');
-
+    List<TaskCategory> taskCategories = await getAllCategories();
     // Convert the List<Map<String, dynamic> into a List<Dog>.
     return List.generate(maps.length, (i) {
+      TaskCategory taskCategory = taskCategories
+          .where((element) => element.id == maps[i]['categoryId'])
+          .toList()[0];
       return Task(
         id: maps[i]['id'],
         title: maps[i]['title'],
@@ -72,6 +72,8 @@ class DBProvider {
         color: maps[i]['color'],
         time: maps[i]['time'],
         date: maps[i]['date'],
+        //categoryId: maps[i]['categoryId'],
+        taskCategory: taskCategory,
       );
     });
   }
@@ -88,17 +90,23 @@ class DBProvider {
     // Query the table for all The Dogs.
     final List<Map<String, dynamic>> maps =
         await db.query('Task', where: "date = ?", whereArgs: [date]);
+    List<TaskCategory> taskCategories = await getAllCategories();
     // Convert the List<Map<String, dynamic> into a List<Dog>.
     return List.generate(maps.length, (i) {
+      TaskCategory taskCategory = taskCategories
+          .where((element) => element.id == maps[i]['categoryId'])
+          .toList()[0];
       return Task(
-          id: maps[i]['id'],
-          title: maps[i]['title'],
-          description: maps[i]['description'],
-          color: maps[i]['color'],
-          time: maps[i]['time'],
-          date: maps[i]['date']);
+        id: maps[i]['id'],
+        title: maps[i]['title'],
+        description: maps[i]['description'],
+        color: maps[i]['color'],
+        time: maps[i]['time'],
+        date: maps[i]['date'],
+        //categoryId: maps[i]['categoryId'],
+        taskCategory: taskCategory,
+      );
     });
-
   }
 
   // Delete a task by id
@@ -137,7 +145,8 @@ class DBProvider {
     });
   }
 
-  Future<List<TaskCategory>> getCategoryById(int id) async {
+  // Get a category by id
+  Future<TaskCategory> getCategoryById(int id) async {
     // Get a reference to the database.
     final Database db = await database;
 
@@ -145,12 +154,91 @@ class DBProvider {
     final List<Map<String, dynamic>> maps =
         await db.query('Category', where: "id = ?", whereArgs: [1]);
     // Convert the List<Map<String, dynamic> into a List<Dog>.
-    return List.generate(maps.length, (i) {
+    List<TaskCategory> category = List.generate(maps.length, (i) {
       return TaskCategory(
         id: maps[i]['id'],
         title: maps[i]['title'],
         color: maps[i]['color'],
       );
     });
+    return category[0];
+  }
+
+  // Delete a category by id
+  deleteCategory(int id) async {
+    final db = await database;
+    db.delete("Category", where: "id = ?", whereArgs: [id]);
+  }
+
+  Future<Map<DateTime, List<dynamic>>> getEvents() async {
+    Map<DateTime, List<dynamic>> events = {};
+    List<Task> tasks = await getAllTasks();
+    List<String> dates = await getEventsDates();
+
+    //List<TaskWidget> taskList = [];
+    //List<dynamic> list = [];
+    for (var date in dates) {
+      List<Task> tList =
+          tasks.where((element) => element.date == date).toList();
+
+      DateTime dateTime = DateTime.parse(date);
+
+      events[dateTime] = tList;
+    }
+
+    return events;
+  }
+
+  Future<List<Task>> getTaskByDate(String date) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps =
+        await db.query('Task', where: "date = ?", whereArgs: [date]);
+    List<TaskCategory> taskCategories = await getAllCategories();
+    return List.generate(maps.length, (i) {
+      TaskCategory taskCategory = taskCategories
+          .where((element) => element.id == maps[i]['categoryId'])
+          .toList()[0];
+      return Task(
+        id: maps[i]['id'],
+        title: maps[i]['title'],
+        description: maps[i]['description'],
+        color: maps[i]['color'],
+        time: maps[i]['time'],
+        date: maps[i]['date'],
+        //categoryId: maps[i]['categoryId'],
+        taskCategory: taskCategory,
+      );
+    });
+  }
+
+  Future<List<String>> getEventsDates() async {
+    List<Task> tasks = await getAllTasks();
+    List<String> dateList = [];
+    for (var item in tasks) {
+      if (!dateList.contains(item.date)) {
+        dateList.add(item.date);
+      }
+    }
+    return dateList;
+  }
+
+  updateTask(Task task) async {
+    print(task.id.toString() + " "+ task.title + " "+ task.description);
+    final db = await database;
+    await db.update(
+      "Task",
+      {
+        "id": task.id,
+        "title": task.title,
+        "description": task.description,
+        "time": task.time,
+        "date": task.date,
+        "categoryId": task.categoryId
+      },
+      where: "id = ?",
+      whereArgs: [task.id],
+      //conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    debugPrint("task updated");
   }
 }

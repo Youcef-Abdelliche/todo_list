@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:todo_list/constants.dart';
 import 'package:todo_list/screens/home/components/body.dart';
-import 'package:todo_list/screens/new_task/newTask.dart';
+import 'package:todo_list/screens/home/components/categories_stat.dart';
+import 'package:todo_list/screens/task_screens/new_Task.dart';
 import 'package:todo_list/size_config.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,7 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icons.more_vert,
                 color: Colors.white,
               ),
-              onPressed: () {})
+              onPressed: () {
+                Route route = MaterialPageRoute(builder: (context) => CategoriesStatistics());
+                Navigator.of(context).push(route);
+              })
         ],
       ),
       body: Body(),

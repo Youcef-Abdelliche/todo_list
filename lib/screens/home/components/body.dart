@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:todo_list/constants.dart';
-
+import 'package:todo_list/models/task.dart';
 import 'package:todo_list/provider/databaseProvider.dart';
 import 'package:todo_list/screens/home/components/task_widget.dart';
+import 'package:todo_list/screens/task_screens/edit_task.dart';
 import 'package:todo_list/size_config.dart';
 
 class Body extends StatefulWidget {
@@ -15,13 +17,27 @@ class _BodyState extends State<Body> {
   bool isToday = true;
 
   CalendarController ctrl;
-  
+
   DateTime todayDate = DateTime.now();
+
+  List<dynamic> selectedDayTasks = [];
+
+  List<dynamic> todayTasks = [];
+
+  DateTime initialDay = DateTime.now();
+
+  GlobalKey _key = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     ctrl = new CalendarController();
+    loadData().then((value) {
+      setState(() {
+        selectedDayTasks = value;
+        todayTasks = value;
+      });
+    });
   }
 
   @override
@@ -79,16 +95,48 @@ class _BodyState extends State<Body> {
                     vertical: SizeConfig.defaultSize * 2),
               )*/
             // filter is monthly
-            : TableCalendar(
-                calendarController: ctrl,
-                startingDayOfWeek: StartingDayOfWeek.sunday,
-                initialCalendarFormat: CalendarFormat.month,
-              ),
+            : FutureBuilder(
+                future: DBProvider.db.getEvents(),
+                builder: (context, AsyncSnapshot snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return TableCalendar(
+                      calendarController: ctrl,
+                      startingDayOfWeek: StartingDayOfWeek.sunday,
+                      initialCalendarFormat: CalendarFormat.twoWeeks,
+                      events: snapshot.data,
+                      calendarStyle: CalendarStyle(
+                        markersColor: kPrimaryColor,
+                        markersMaxAmount: 3,
+                      ),
+                      initialSelectedDay: initialDay,
+                    );
+                  } else if (snapshot.hasData) {
+                    return TableCalendar(
+                      calendarController: ctrl,
+                      startingDayOfWeek: StartingDayOfWeek.sunday,
+                      initialCalendarFormat: CalendarFormat.twoWeeks,
+                      events: snapshot.data,
+                      calendarStyle: CalendarStyle(
+                        markersColor: kPrimaryColor,
+                        markersMaxAmount: 3,
+                      ),
+                      initialSelectedDay: initialDay,
+                      onDaySelected: (dateTime, list1, list2) {
+                        setState(() {
+                          initialDay = dateTime;
+                          selectedDayTasks = list1;
+                          if (dateTime == DateTime.now()) todayTasks = list1;
+                        });
+                      },
+                    );
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                }),
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: Column(
-              //crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: SizeConfig.defaultSize * 0.5),
                 Container(
@@ -107,44 +155,85 @@ class _BodyState extends State<Body> {
                           height: SizeConfig.defaultSize,
                         ),
                         FutureBuilder(
-                            future: (!isToday) ? DBProvider.db.getAllTasks() : DBProvider.db.getTodayTasks(),
-                            builder:
-                                (BuildContext context, AsyncSnapshot snapshot) {
+                            future: (isToday)
+                                ? DBProvider.db.getTodayTasks()
+                                : DBProvider.db.getTaskByDate(
+                                    initialDay.year.toString() +
+                                        "-" +
+                                        initialDay.month.toString() +
+                                        "-" +
+                                        initialDay.day.toString()),
+                            builder: (context, AsyncSnapshot snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return Center(
-                                  child: Text("Loading..."),
-                                );
-                              } else if (snapshot.hasData) {
-                                return Column(
-                                  children: List.generate(snapshot.data.length,
-                                      (index) {
-                                    return TaskWidget(
-                                      color: Color(snapshot.data[index].color),
-                                      name: snapshot.data[index].title,
-                                      date: snapshot.data[index].date,
-                                      time: TimeOfDay(
-                                          hour: snapshot.data[index].time ~/ 60,
-                                          minute:
-                                              snapshot.data[index].time % 60),
-                                      function: () {
-                                        setState(() {
-                                          DBProvider.db.deleteTask(
-                                              snapshot.data[index].id);
-                                        });
-                                      },
-                                      function2: () {
-                                        // Edit task
-                                      },
-                                    );
-                                  }),
-                                );
-                              } else if (snapshot.data.title == null) {
-                                return Center(
-                                    child: CircularProgressIndicator());
-                              }
-                              return Center(child: CircularProgressIndicator());
-                            }),
+                                return Text("");
+                              } else if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.hasData) {
+                                  return Column(
+                                    children: List.generate(
+                                        snapshot.data.length, (index) {
+                                      return TaskWidget(
+                                        color:
+                                            Color(snapshot.data[index].color),
+                                        name: snapshot.data[index].title,
+                                        date: snapshot.data[index].date,
+                                        category:
+                                            snapshot.data[index].taskCategory,
+                                        time: TimeOfDay(
+                                            hour:
+                                                snapshot.data[index].time ~/ 60,
+                                            minute:
+                                                snapshot.data[index].time % 60),
+                                        function: () {
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                    title:
+                                                        Text("Delete a task"),
+                                                    content: Text(
+                                                        "Are you sure you want to delete this task ?"),
+                                                    actions: [
+                                                      FlatButton(
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              DBProvider.db
+                                                                  .deleteTask(
+                                                                      snapshot
+                                                                          .data[
+                                                                              index]
+                                                                          .id);
+                                                            });
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                          child: Text("Ok")),
+                                                      FlatButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                          child: Text("Cancel"))
+                                                    ],
+                                                  ));
+                                        },
+                                        function2: () {
+                                          // Edit task
+                                          Route route = MaterialPageRoute(
+                                              builder: (context) =>
+                                                  EditTaskScreen(
+                                                    task: snapshot.data[index],
+                                                  ));
+                                          Navigator.of(context).push(route).then((value) => setState((){}));
+                                        },
+                                      );
+                                    }),
+                                  );
+                                } else
+                                  return Text("Error");
+                              } else
+                                return Text("Error");
+                            })
                       ],
                     ),
                   ),
@@ -177,4 +266,8 @@ class _BodyState extends State<Body> {
       ],
     );
   }
+}
+
+Future<List<Task>> loadData() async {
+  return await DBProvider.db.getTodayTasks();
 }

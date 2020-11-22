@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:todo_list/models/task_category.dart';
 
 Task taskFromJson(String str) {
   final jsonData = json.decode(str);
@@ -17,8 +18,9 @@ class Task {
   String date;
   int time;
   bool isFinished;
-  String category;
+  int categoryId;
   int color;
+  TaskCategory taskCategory;
 
   Task({
     this.id,
@@ -28,7 +30,8 @@ class Task {
     this.description,
     this.color,
     this.date,
-    //this.category,
+    this.categoryId,
+    this.taskCategory,
   });
 
   /*factory Task.fromMap(Map<String, dynamic> json) => new Task(
@@ -44,6 +47,8 @@ class Task {
         color: json["color"],
         time: json['time'],
         date: json['date'],
+        categoryId: json['categoryId'],
+      
       );
 
   Map<String, dynamic> toMap() => {
@@ -53,5 +58,6 @@ class Task {
         'color': color,
         'time': time,
         'date': date,
+        'categoryId': categoryId,
       };
 }

@@ -134,7 +134,7 @@ class _NewCategoryState extends State<NewCategory> {
                       padding:
                           EdgeInsets.symmetric(vertical: defaultSize * 1.4),
                       child: Text(
-                        "Add Task",
+                        "Add Category",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: defaultSize * 2, color: Colors.white),

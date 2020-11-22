@@ -24,8 +24,11 @@ class _NewTaskState extends State<NewTask> {
       DateTime.now().month.toString() +
       "-" +
       DateTime.now().day.toString();
-  String _category;
+
+  String _categoryTitle;
+  int _categoryId;
   Color _selectedColor = Color(0xff6074F9);
+  List<TaskCategory> listCategories;
 
   @override
   Widget build(BuildContext context) {
@@ -126,113 +129,8 @@ class _NewTaskState extends State<NewTask> {
                         ],
                       ),
                     ),
-                    SizedBox(height: SizeConfig.defaultSize * 1.4),
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: defaultSize * 2),
-                      child: Text("Choose Color",
-                          style: TextStyle(fontSize: defaultSize * 2)),
-                    ),
-                    SizedBox(height: SizeConfig.defaultSize * 1.4),
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: defaultSize * 2),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedColor = Color(0xff6074F9);
-                              });
-                            },
-                            child: Container(
-                                width: defaultSize * 5,
-                                height: defaultSize * 5,
-                                decoration: BoxDecoration(
-                                    color: Color(0xff6074F9),
-                                    borderRadius: BorderRadius.circular(5),
-                                    border:
-                                        (_selectedColor == Color(0xff6074F9))
-                                            ? Border.all(
-                                                color: kPrimaryColor, width: 3)
-                                            : null)),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedColor = Color(0xffE42B6A);
-                              });
-                            },
-                            child: Container(
-                                width: defaultSize * 5,
-                                height: defaultSize * 5,
-                                decoration: BoxDecoration(
-                                    color: Color(0xffE42B6A),
-                                    borderRadius: BorderRadius.circular(5),
-                                    border:
-                                        (_selectedColor == Color(0xffE42B6A))
-                                            ? Border.all(
-                                                color: kPrimaryColor, width: 3)
-                                            : null)),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedColor = Color(0xff5ABB56);
-                              });
-                            },
-                            child: Container(
-                                width: defaultSize * 5,
-                                height: defaultSize * 5,
-                                decoration: BoxDecoration(
-                                    color: Color(0xff5ABB56),
-                                    borderRadius: BorderRadius.circular(5),
-                                    border:
-                                        (_selectedColor == Color(0xff5ABB56))
-                                            ? Border.all(
-                                                color: kPrimaryColor, width: 3)
-                                            : null)),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedColor = Color(0xff3D3A62);
-                              });
-                            },
-                            child: Container(
-                                width: defaultSize * 5,
-                                height: defaultSize * 5,
-                                decoration: BoxDecoration(
-                                    color: Color(0xff3D3A62),
-                                    borderRadius: BorderRadius.circular(5),
-                                    border:
-                                        (_selectedColor == Color(0xff3D3A62))
-                                            ? Border.all(
-                                                color: kPrimaryColor, width: 3)
-                                            : null)),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedColor = Color(0xffF4CA8F);
-                              });
-                            },
-                            child: Container(
-                                width: defaultSize * 5,
-                                height: defaultSize * 5,
-                                decoration: BoxDecoration(
-                                    color: Color(0xffF4CA8F),
-                                    borderRadius: BorderRadius.circular(5),
-                                    border:
-                                        (_selectedColor == Color(0xffF4CA8F))
-                                            ? Border.all(
-                                                color: kPrimaryColor, width: 3)
-                                            : null)),
-                          ),
-                        ],
-                      ),
-                    ),
+                    
+                    
                     SizedBox(height: SizeConfig.defaultSize * 1.4),
                     Padding(
                       padding:
@@ -253,12 +151,17 @@ class _NewTaskState extends State<NewTask> {
                                     child: Text("Loading..."),
                                   );
                                 } else if (snapshot.hasData) {
+                                  
                                   return DropdownButton(
-                                    value: _category,
+                                    value: _categoryTitle,
                                     hint: Text("Select Category"),
                                     onChanged: (String value) {
                                       setState(() {
-                                        _category = value;
+                                        _categoryTitle = value;
+                                        listCategories = snapshot.data.where(
+                                            (element) =>
+                                                element.title == value).toList();
+                                        _categoryId = listCategories[0].id;
                                       });
                                     },
                                     items: snapshot.data
@@ -280,24 +183,6 @@ class _NewTaskState extends State<NewTask> {
                                 return Center(
                                     child: CircularProgressIndicator());
                               }),
-                          /*DropdownButton(
-                            value: _category,
-                            hint: Text("Select Category"),
-                            onChanged: (String value) {
-                              setState(() {
-                                _category = value;
-                              });
-                            },
-                            items: <String>['Work', 'Personal', 'Sport']
-                                .map<DropdownMenuItem<String>>(
-                                    (String value) => DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value,
-                                              style: TextStyle(
-                                                  fontSize: defaultSize * 2)),
-                                        ))
-                                .toList(),
-                          ),*/
                           IconButton(
                               icon: Icon(Icons.add),
                               onPressed: () {
@@ -334,11 +219,13 @@ class _NewTaskState extends State<NewTask> {
                           _formKey.currentState.save();
                           int time = _time.hour * 60 + _time.minute;
                           Task task = new Task(
-                              title: _title,
-                              date: _date,
-                              description: _description,
-                              color: _selectedColor.value,
-                              time: time);
+                            title: _title,
+                            date: _date,
+                            description: _description,
+                            color: _selectedColor.value,
+                            time: time,
+                            categoryId: _categoryId,
+                          );
                           DBProvider.db.insertTask(task);
                           Navigator.of(context).pop();
                         }
