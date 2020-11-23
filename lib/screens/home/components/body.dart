@@ -26,8 +26,6 @@ class _BodyState extends State<Body> {
 
   DateTime initialDay = DateTime.now();
 
-  GlobalKey _key = GlobalKey();
-
   @override
   void initState() {
     super.initState();
@@ -174,6 +172,8 @@ class _BodyState extends State<Body> {
                                     children: List.generate(
                                         snapshot.data.length, (index) {
                                       return TaskWidget(
+                                        isFinished:
+                                            snapshot.data[index].isFinished,
                                         color:
                                             Color(snapshot.data[index].color),
                                         name: snapshot.data[index].title,
@@ -224,7 +224,14 @@ class _BodyState extends State<Body> {
                                                   EditTaskScreen(
                                                     task: snapshot.data[index],
                                                   ));
-                                          Navigator.of(context).push(route).then((value) => setState((){}));
+                                          Navigator.of(context)
+                                              .push(route)
+                                              .then((value) => setState(() {}));
+                                        },
+                                        function3: () async {
+                                          DBProvider.db.updateTaskStatus(
+                                              snapshot.data[index]);
+                                          setState(() {});
                                         },
                                       );
                                     }),

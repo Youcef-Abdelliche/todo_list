@@ -225,6 +225,7 @@ class _NewTaskState extends State<NewTask> {
                             color: _selectedColor.value,
                             time: time,
                             categoryId: _categoryId,
+                            isFinished: false,
                           );
                           DBProvider.db.insertTask(task);
                           Navigator.of(context).pop();

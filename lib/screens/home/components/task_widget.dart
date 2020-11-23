@@ -10,9 +10,11 @@ class TaskWidget extends StatefulWidget {
   final TimeOfDay time;
   final String name;
   final String date;
+  final bool isFinished;
   final TaskCategory category;
   final Function function;
   final Function function2;
+  final Function function3;
 
   const TaskWidget(
       {Key key,
@@ -21,8 +23,10 @@ class TaskWidget extends StatefulWidget {
       this.name,
       this.function,
       this.function2,
+      this.function3,
       this.time,
       this.date,
+      this.isFinished,
       this.category})
       : super(key: key);
 
@@ -36,54 +40,66 @@ class _TaskWidgetState extends State<TaskWidget> {
     return Slidable(
       actionPane: SlidableDrawerActionPane(),
       actionExtentRatio: 0.3,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: SizeConfig.defaultSize * 0.2),
-        width: SizeConfig.screenHeight,
-        height: SizeConfig.screenWidth / 6,
-        decoration: BoxDecoration(color: Colors.white, boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              offset: Offset(0, 9),
-              blurRadius: 20,
-              spreadRadius: 1)
-        ]),
-        child: Row(
-          children: [
-            Container(
-              margin:
-                  EdgeInsets.symmetric(horizontal: SizeConfig.defaultSize * 2),
-              width: SizeConfig.defaultSize * 2.6,
-              height: SizeConfig.defaultSize * 2.6,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Color(widget.category.color), width: 4)),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(widget.name,
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: SizeConfig.defaultSize * 1.9)),
-                Text(widget.time.toString().substring(10, 15),
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: SizeConfig.defaultSize * 1.7)),
-              ],
-            ),
-            Expanded(child: Container()),
-            Container(
-              padding: EdgeInsets.all(6),
-              //width: 5,
-              //height: SizeConfig.defaultSize * 3,
-              child: Text(widget.category.title,
-                  style: TextStyle(color: Colors.white)),
-              decoration: BoxDecoration(color: Color(widget.category.color)),
-            )
-          ],
+      child: GestureDetector(
+        onTap: () {
+          widget.function3();
+        },
+        child: Container(
+          margin:
+              EdgeInsets.symmetric(horizontal: SizeConfig.defaultSize * 0.2),
+          width: SizeConfig.screenHeight,
+          height: SizeConfig.screenWidth / 6,
+          decoration: BoxDecoration(color: Colors.white, boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                offset: Offset(0, 9),
+                blurRadius: 20,
+                spreadRadius: 1)
+          ]),
+          child: Row(
+            children: [
+              Container(
+                margin: EdgeInsets.symmetric(
+                    horizontal: SizeConfig.defaultSize * 2),
+                width: SizeConfig.defaultSize * 2.6,
+                height: SizeConfig.defaultSize * 2.6,
+                /*decoration: BoxDecoration(
+                    color: (widget.isFinished)
+                        ? Color(widget.category.color)
+                        : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: Color(widget.category.color), width: 4)),*/
+                child: Icon(Icons.check_box,
+                    color: (widget.isFinished)
+                        ? Color(widget.category.color)
+                        : Colors.grey),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(widget.name,
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: SizeConfig.defaultSize * 1.9)),
+                  Text(widget.time.toString().substring(10, 15),
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: SizeConfig.defaultSize * 1.7)),
+                ],
+              ),
+              Expanded(child: Container()),
+              Container(
+                padding: EdgeInsets.all(6),
+                //width: 5,
+                //height: SizeConfig.defaultSize * 3,
+                child: Text(widget.category.title,
+                    style: TextStyle(color: Colors.white)),
+                decoration: BoxDecoration(color: Color(widget.category.color)),
+              )
+            ],
+          ),
         ),
       ),
       secondaryActions: [

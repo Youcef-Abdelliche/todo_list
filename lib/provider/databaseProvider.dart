@@ -33,6 +33,7 @@ class DBProvider {
           "time INTEGER,"
           "date TEXT,"
           "categoryId INTEGER,"
+          "isFinished INTEGER,"
           "FOREIGN KEY(categoryId) references Category(id) ON DELETE CASCADE"
           ")");
       await db.execute("CREATE TABLE Category ("
@@ -46,6 +47,7 @@ class DBProvider {
   Future<void> insertTask(Task task) async {
     // Get a reference to the database.
     final Database db = await database;
+    print("object+++++++++++" + task.isFinished.toString());
     await db.insert(
       'Task',
       task.toMap(),
@@ -74,6 +76,7 @@ class DBProvider {
         date: maps[i]['date'],
         //categoryId: maps[i]['categoryId'],
         taskCategory: taskCategory,
+        isFinished: (maps[i]['isFinished'] == 0) ? false : true,
       );
     });
   }
@@ -91,7 +94,7 @@ class DBProvider {
     final List<Map<String, dynamic>> maps =
         await db.query('Task', where: "date = ?", whereArgs: [date]);
     List<TaskCategory> taskCategories = await getAllCategories();
-    // Convert the List<Map<String, dynamic> into a List<Dog>.
+    // Convert the List<Map<String, dynamic> into a List<Task>.
     return List.generate(maps.length, (i) {
       TaskCategory taskCategory = taskCategories
           .where((element) => element.id == maps[i]['categoryId'])
@@ -105,6 +108,8 @@ class DBProvider {
         date: maps[i]['date'],
         //categoryId: maps[i]['categoryId'],
         taskCategory: taskCategory,
+        //isFinished: true,
+        isFinished: (maps[i]['isFinished'] == 0) ? false : true,
       );
     });
   }
@@ -207,6 +212,7 @@ class DBProvider {
         date: maps[i]['date'],
         //categoryId: maps[i]['categoryId'],
         taskCategory: taskCategory,
+        isFinished: (maps[i]['isFinished'] == 0) ? false : true,
       );
     });
   }
@@ -223,7 +229,6 @@ class DBProvider {
   }
 
   updateTask(Task task) async {
-    print(task.id.toString() + " "+ task.title + " "+ task.description);
     final db = await database;
     await db.update(
       "Task",
@@ -233,7 +238,43 @@ class DBProvider {
         "description": task.description,
         "time": task.time,
         "date": task.date,
-        "categoryId": task.categoryId
+        "categoryId": task.categoryId,
+      },
+      where: "id = ?",
+      whereArgs: [task.id],
+      //conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    debugPrint("task updated");
+  }
+
+  Future<List<TaskCategory>> getTasksByCategory() async {
+    List<TaskCategory> categories = await getAllCategories();
+    List<Task> tasks = await getAllTasks();
+    List<TaskCategory> temCategories = [];
+    for (var item in categories) {
+      temCategories.add(TaskCategory(
+          id: item.id,
+          color: item.color,
+          title: item.title,
+          itemsFinished: tasks
+              .where((element) =>
+                  element.taskCategory.id == item.id && element.isFinished)
+              .toList()
+              .length,
+          items: tasks
+              .where((element) => element.taskCategory.id == item.id)
+              .toList()
+              .length));
+    }
+    return temCategories;
+  }
+
+  updateTaskStatus(Task task) async {
+    final db = await database;
+    await db.update(
+      "Task",
+      {
+        "isFinished": (task.isFinished) ? 0 : 1,
       },
       where: "id = ?",
       whereArgs: [task.id],

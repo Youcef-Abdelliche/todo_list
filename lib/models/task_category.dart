@@ -2,9 +2,11 @@ class TaskCategory {
   int id;
   String title;
   int items;
+  int itemsFinished;
   int color;
 
-  TaskCategory({this.id, this.title, this.color});
+  TaskCategory(
+      {this.id, this.title, this.color, this.items, this.itemsFinished});
 
   factory TaskCategory.fromMap(Map<String, dynamic> json) => new TaskCategory(
         id: json["id"],

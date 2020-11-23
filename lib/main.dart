@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:todo_list/constants.dart';
 import 'package:todo_list/provider/taskManager.dart';
 import 'package:todo_list/screens/home/home.dart';
+import 'package:todo_list/screens/test.dart';
 
 void main() {
   runApp(MyApp());
